@@ -22,7 +22,7 @@ public class OutboxEventListenerIntegrator implements Integrator {
         final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService(EventListenerRegistry.class);
 
         eventListenerRegistry.appendListeners(POST_INSERT, OutboxEventListener.INSTANCE);
-        eventListenerRegistry.appendListeners(POST_UPDATE, OutboxEventListener.INSTANCE);
+        eventListenerRegistry.appendListeners(PRE_UPDATE, OutboxEventListener.INSTANCE);
         eventListenerRegistry.appendListeners(PRE_DELETE, OutboxEventListener.INSTANCE);
     }
 

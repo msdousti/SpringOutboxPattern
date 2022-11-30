@@ -8,10 +8,12 @@ import org.hibernate.event.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.io.Serial;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 public class OutboxEventListener implements
-        PostInsertEventListener, PostUpdateEventListener, PreDeleteEventListener {
+        PostInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
 
     @Serial
     private static final long serialVersionUID = 2180674581693436007L;
@@ -25,19 +27,20 @@ public class OutboxEventListener implements
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        log.info("===========> Executing onPostInsert().........");
         dispatchToOutboxTable(event.getSession(), event.getEntity(), "C");
     }
 
     @Override
-    public void onPostUpdate(PostUpdateEvent event) {
-        log.info("===========> Executing onPostUpdate().........");
-        dispatchToOutboxTable(event.getSession(), event.getEntity(), "U");
+    public boolean onPreUpdate(PreUpdateEvent event) {
+        var names2indices = array2map(event.getPersister().getPropertyNames());
+        var indexOfIsbn = names2indices.get("isbn");
+        if (event.getOldState()[indexOfIsbn] != event.getState()[indexOfIsbn])
+            dispatchToOutboxTable(event.getSession(), event.getEntity(), "U");
+        return false;
     }
 
     @Override
     public boolean onPreDelete(PreDeleteEvent event) {
-        log.info("===========> Executing onPreDelete().........");
         dispatchToOutboxTable(event.getSession(), event.getEntity(), "D");
         return false;
     }
@@ -60,5 +63,12 @@ public class OutboxEventListener implements
                 // a "duplicate key value violates unique constraint" exception is thrown.
                 .setHibernateFlushMode(FlushMode.MANUAL)
                 .executeUpdate();
+    }
+
+    private static Map<String, Integer> array2map(String[] array) {
+        var m = new HashMap<String, Integer>();
+        for (int i = 0; i < array.length; i++)
+            m.put(array[i].toLowerCase(), i);
+        return m;
     }
 }

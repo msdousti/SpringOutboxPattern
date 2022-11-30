@@ -45,6 +45,10 @@ class BookOutboxTest {
         bookRepo.save(bookForInsert);
         assertThat(getCountInOutbox("C")).isEqualTo(1L);
 
+        // we only monitor updates to "isbn"
+        bookRepo.save(bookForUpdate.name("Book for update!"));
+        assertThat(getCountInOutbox("U")).isEqualTo(0L);
+
         bookRepo.save(bookForUpdate.isbn("123456789"));
         assertThat(getCountInOutbox("U")).isEqualTo(1L);
 
