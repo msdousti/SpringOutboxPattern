@@ -33,7 +33,7 @@ public class OutboxEventListener implements
     @Override
     public boolean onPreUpdate(PreUpdateEvent event) {
         var names2indices = array2map(event.getPersister().getPropertyNames());
-        var indexOfIsbn = names2indices.get("isbn");
+        var indexOfIsbn = names2indices.get(Book.Fields.isbn);
         if (event.getOldState()[indexOfIsbn] != event.getState()[indexOfIsbn])
             dispatchToOutboxTable(event.getSession(), event.getEntity(), "U");
         return false;
@@ -68,7 +68,7 @@ public class OutboxEventListener implements
     private static Map<String, Integer> array2map(String[] array) {
         var m = new HashMap<String, Integer>();
         for (int i = 0; i < array.length; i++)
-            m.put(array[i].toLowerCase(), i);
+            m.put(array[i], i);
         return m;
     }
 }

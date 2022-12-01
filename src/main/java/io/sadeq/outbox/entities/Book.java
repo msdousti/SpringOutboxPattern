@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -15,6 +16,7 @@ import javax.persistence.Id;
 @Accessors(fluent = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldNameConstants
 public class Book {
     @Id
     private Long id;
