@@ -6,19 +6,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.FlushMode;
 import org.hibernate.event.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
+import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@Component
 public class OutboxEventListener implements
         PostInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
 
     @Serial
     private static final long serialVersionUID = 2180674581693436007L;
-
-    public static final OutboxEventListener INSTANCE = new OutboxEventListener();
 
     @Override
     public boolean requiresPostCommitHanding(EntityPersister entityPersister) {

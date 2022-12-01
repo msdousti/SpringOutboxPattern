@@ -1,11 +1,15 @@
 package io.sadeq.outbox.repo;
 
+import io.sadeq.outbox.config.HibernateConfig;
+import io.sadeq.outbox.config.OutboxEventListener;
+import io.sadeq.outbox.config.OutboxEventListenerIntegrator;
 import io.sadeq.outbox.entities.Book;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.Rollback;
 
 import javax.persistence.EntityManager;
@@ -15,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @DataJpaTest
+@Import({OutboxEventListener.class, OutboxEventListenerIntegrator.class, HibernateConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Rollback(false)
 class BookOutboxTest {

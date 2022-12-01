@@ -5,13 +5,20 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static org.hibernate.event.spi.EventType.*;
 
+@Component
 public class OutboxEventListenerIntegrator implements Integrator {
 
-    public static final OutboxEventListenerIntegrator INSTANCE =
-            new OutboxEventListenerIntegrator();
+    private final OutboxEventListener listener;
+
+    @Autowired
+    public OutboxEventListenerIntegrator(OutboxEventListener listener) {
+        this.listener = listener;
+    }
 
     @Override
     public void integrate(
@@ -21,9 +28,9 @@ public class OutboxEventListenerIntegrator implements Integrator {
 
         final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService(EventListenerRegistry.class);
 
-        eventListenerRegistry.appendListeners(POST_INSERT, OutboxEventListener.INSTANCE);
-        eventListenerRegistry.appendListeners(PRE_UPDATE, OutboxEventListener.INSTANCE);
-        eventListenerRegistry.appendListeners(PRE_DELETE, OutboxEventListener.INSTANCE);
+        eventListenerRegistry.appendListeners(POST_INSERT, listener);
+        eventListenerRegistry.appendListeners(PRE_UPDATE, listener);
+        eventListenerRegistry.appendListeners(PRE_DELETE, listener);
     }
 
     @Override
