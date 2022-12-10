@@ -3,13 +3,16 @@ package io.sadeq.outbox.repo;
 import io.sadeq.outbox.config.HibernateConfig;
 import io.sadeq.outbox.config.OutboxEventListener;
 import io.sadeq.outbox.config.OutboxEventListenerIntegrator;
+import io.sadeq.outbox.entities.Author;
 import io.sadeq.outbox.entities.Book;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.annotation.Rollback;
 
 import javax.persistence.EntityManager;
@@ -21,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Import({OutboxEventListener.class, OutboxEventListenerIntegrator.class, HibernateConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@EnableJpaAuditing
+@AutoConfigureJson
 @Rollback(false)
 class BookOutboxTest {
 
@@ -39,7 +44,7 @@ class BookOutboxTest {
 
     @BeforeEach
     void beforeEach() {
-        em.createNativeQuery("TRUNCATE table book").executeUpdate();
+        em.createNativeQuery("TRUNCATE table book CASCADE").executeUpdate();
         em.persist(bookForUpdate);
         em.persist(bookForDelete);
         em.createNativeQuery("TRUNCATE table book_outbox").executeUpdate();
@@ -56,6 +61,10 @@ class BookOutboxTest {
 
         bookRepo.save(bookForUpdate.isbn("123456789"));
         assertThat(getCountInOutbox("U")).isEqualTo(1L);
+
+        Author johnDoe = new Author().id(1L).name("John Doe");
+        bookRepo.save(bookForUpdate.addAuthor(johnDoe));
+        assertThat(getCountInOutbox("U")).isEqualTo(2L);
 
         bookRepo.delete(bookForDelete);
         assertThat(getCountInOutbox("D")).isEqualTo(1L);

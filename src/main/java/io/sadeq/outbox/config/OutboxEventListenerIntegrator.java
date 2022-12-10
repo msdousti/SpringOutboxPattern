@@ -31,6 +31,7 @@ public class OutboxEventListenerIntegrator implements Integrator {
         eventListenerRegistry.appendListeners(POST_INSERT, listener);
         eventListenerRegistry.appendListeners(PRE_UPDATE, listener);
         eventListenerRegistry.appendListeners(PRE_DELETE, listener);
+        eventListenerRegistry.appendListeners(POST_COLLECTION_UPDATE, listener);
     }
 
     @Override

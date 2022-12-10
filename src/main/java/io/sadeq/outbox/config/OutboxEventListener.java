@@ -1,11 +1,13 @@
 package io.sadeq.outbox.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sadeq.outbox.entities.Book;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.FlushMode;
 import org.hibernate.event.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.Serial;
@@ -15,10 +17,17 @@ import java.util.Map;
 @Slf4j
 @Component
 public class OutboxEventListener implements
-        PostInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
+        PostInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PostCollectionUpdateEventListener {
+
+    private final ObjectMapper objectMapper;
 
     @Serial
     private static final long serialVersionUID = 2180674581693436007L;
+
+    @Autowired
+    public OutboxEventListener(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public boolean requiresPostCommitHanding(EntityPersister entityPersister) {
@@ -45,6 +54,13 @@ public class OutboxEventListener implements
         return false;
     }
 
+    @Override
+    public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
+        Object affectedOwner = event.getAffectedOwnerOrNull();
+        if (affectedOwner != null)
+            dispatchToOutboxTable(event.getSession(), affectedOwner, "U");
+    }
+
     private void dispatchToOutboxTable(EventSource session, Object entity, String dataOp) {
         if (entity instanceof Book book) {
             insertRecordIntoOutbox(session, book, dataOp);
@@ -56,7 +72,7 @@ public class OutboxEventListener implements
         session.createNativeQuery(
                         "INSERT INTO book_outbox (data, data_op) VALUES (cast(:data as jsonb), :data_op)"
                 )
-                .setParameter("data", book.toJson())
+                .setParameter("data", objectMapper.writeValueAsString(book))
                 .setParameter("data_op", dataOp)
                 // See https://vladmihalcea.com/hibernate-event-listeners
                 // If not set (i.e., default AUTO is used),
