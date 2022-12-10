@@ -32,9 +32,9 @@ class BookOutboxTest {
     private final BookRepo bookRepo;
     private final EntityManager em;
 
-    private final Book bookForInsert = new Book().id(1L).name("Book for insert");
-    private final Book bookForUpdate = new Book().id(2L).name("Book for update");
-    private final Book bookForDelete = new Book().id(3L).name("Book for delete");
+    private Book bookForInsert = new Book().name("Book for insert");
+    private Book bookForUpdate = new Book().name("Book for update");
+    private Book bookForDelete = new Book().name("Book for delete");
 
     @Autowired
     BookOutboxTest(BookRepo bookRepo, EntityManager em) {
@@ -45,24 +45,24 @@ class BookOutboxTest {
     @BeforeEach
     void beforeEach() {
         em.createNativeQuery("TRUNCATE table book CASCADE").executeUpdate();
-        em.persist(bookForUpdate);
-        em.persist(bookForDelete);
+        bookForUpdate = bookRepo.save(bookForUpdate);
+        bookForDelete = bookRepo.save(bookForDelete);
         em.createNativeQuery("TRUNCATE table book_outbox").executeUpdate();
     }
 
     @Test
     void testAllOperations() {
-        bookRepo.save(bookForInsert);
+        bookForInsert = bookRepo.save(bookForInsert);
         assertThat(getCountInOutbox("C")).isEqualTo(1L);
-
-        // we only monitor updates to "isbn"
-        bookRepo.save(bookForUpdate.name("Book for update!"));
-        assertThat(getCountInOutbox("U")).isEqualTo(0L);
 
         bookRepo.save(bookForUpdate.isbn("123456789"));
         assertThat(getCountInOutbox("U")).isEqualTo(1L);
 
-        Author johnDoe = new Author().id(1L).name("John Doe");
+        // we only monitor updates to "isbn"
+        bookRepo.save(bookForUpdate.name("Book for update!"));
+        assertThat(getCountInOutbox("U")).isEqualTo(1L);
+
+        Author johnDoe = new Author().name("John Doe");
         bookRepo.save(bookForUpdate.addAuthor(johnDoe));
         assertThat(getCountInOutbox("U")).isEqualTo(2L);
 
